@@ -1,0 +1,515 @@
+basePath: /api/v1
+definitions:
+  github_com_xumoe-c_maiecho_server_internal_model.AnalysisResult:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      difficulty_analysis:
+        type: string
+      id:
+        type: integer
+      rating_advice:
+        type: string
+      summary:
+        type: string
+      target_id:
+        type: integer
+      target_type:
+        description: Song or Chart
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  github_com_xumoe-c_maiecho_server_internal_model.Chart:
+    properties:
+      avg_achievement:
+        type: number
+      avg_dx:
+        type: number
+      charter:
+        description: NotesDesigner
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      difficulty:
+        description: Basic, Advanced, Expert, Master, Re:Master
+        type: string
+      ds:
+        description: Internal decimal level
+        type: number
+      fit_diff:
+        type: number
+      id:
+        type: integer
+      level:
+        description: 13, 13+, 14, etc.
+        type: string
+      notes:
+        description: 'JSON array: [tap, hold, slide, touch, break]'
+        type: string
+      sample_count:
+        type: integer
+      song_id:
+        type: integer
+      std_dev:
+        type: number
+      updatedAt:
+        type: string
+    type: object
+  github_com_xumoe-c_maiecho_server_internal_model.Song:
+    properties:
+      aliases:
+        items:
+          $ref: '#/definitions/github_com_xumoe-c_maiecho_server_internal_model.SongAlias'
+        type: array
+      artist:
+        type: string
+      bpm:
+        type: number
+      charts:
+        items:
+          $ref: '#/definitions/github_com_xumoe-c_maiecho_server_internal_model.Chart'
+        type: array
+      cover_url:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      genre:
+        type: string
+      id:
+        description: 来自 Diving-Fish 的 ID
+        type: integer
+      is_new:
+        type: boolean
+      release_date:
+        type: string
+      title:
+        type: string
+      type:
+        description: DX or 标准
+        type: string
+      updatedAt:
+        type: string
+      version:
+        description: 乐曲更新版本
+        type: string
+    type: object
+  github_com_xumoe-c_maiecho_server_internal_model.SongAlias:
+    properties:
+      alias:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      song_id:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  github_com_xumoe-c_maiecho_server_internal_model.SongListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/github_com_xumoe-c_maiecho_server_internal_model.Song'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_xumoe-c_maiecho_server_internal_status.SystemStatus:
+    properties:
+      active_tasks:
+        type: integer
+      goroutines:
+        type: integer
+      last_log_entry:
+        type: string
+      memory_usage_mb:
+        type: integer
+      uptime:
+        $ref: '#/definitions/time.Duration'
+    type: object
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  internal_controller.BatchAnalysisRequest:
+    properties:
+      game_ids:
+        items:
+          type: integer
+        type: array
+    required:
+    - game_ids
+    type: object
+  internal_controller.CollectRequest:
+    properties:
+      game_id:
+        type: integer
+      keyword:
+        type: string
+    type: object
+  time.Duration:
+    enum:
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    format: int64
+    type: integer
+    x-enum-varnames:
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+host: localhost:8080
+info:
+  contact: {}
+  description: MaiEcho 是一个用于音乐评论和分析的服务器应用程序。
+  title: MaiEcho API
+  version: "1.0"
+paths:
+  /analysis/batch:
+    post:
+      consumes:
+      - application/json
+      description: 触发针对多个歌曲ID(GameID)的LLM分析流程
+      parameters:
+      - description: Batch Analysis Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_controller.BatchAnalysisRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 批量分析歌曲
+      tags:
+      - analysis
+  /analysis/songs/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定歌曲(GameID)的最新分析结果
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_xumoe-c_maiecho_server_internal_model.AnalysisResult'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 获取分析结果
+      tags:
+      - analysis
+    post:
+      consumes:
+      - application/json
+      description: 触发针对指定歌曲ID(GameID)的LLM分析流程
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 分析歌曲
+      tags:
+      - analysis
+  /collect:
+    post:
+      consumes:
+      - application/json
+      description: 针对特定关键词或GameID启动数据收集任务
+      parameters:
+      - description: Collection Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_controller.CollectRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 触发数据收集任务
+      tags:
+      - collector
+  /collect/backfill:
+    post:
+      description: 用于初始化数据源，为无数据的歌曲收集评论数据
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 触发回填数据收集
+      tags:
+      - collector
+  /songs:
+    get:
+      consumes:
+      - application/json
+      description: 支持分页和多种筛选条件
+      parameters:
+      - description: 版本
+        in: query
+        name: version
+        type: string
+      - description: 类型 (DX/Standard)
+        in: query
+        name: type
+        type: string
+      - description: 流派
+        in: query
+        name: genre
+        type: string
+      - description: 最小定数
+        in: query
+        name: min_ds
+        type: number
+      - description: 最大定数
+        in: query
+        name: max_ds
+        type: number
+      - description: 是否新歌
+        in: query
+        name: is_new
+        type: boolean
+      - description: 搜索关键词
+        in: query
+        name: keyword
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_xumoe-c_maiecho_server_internal_model.SongListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 获取歌曲列表
+      tags:
+      - songs
+    post:
+      consumes:
+      - application/json
+      description: 向数据库添加新歌曲
+      parameters:
+      - description: Song JSON
+        in: body
+        name: song
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_xumoe-c_maiecho_server_internal_model.Song'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_xumoe-c_maiecho_server_internal_model.Song'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 创建歌曲
+      tags:
+      - songs
+  /songs/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 获取歌曲及其谱面详情 (通过 GameID)
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_xumoe-c_maiecho_server_internal_model.Song'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 获取歌曲详情
+      tags:
+      - songs
+  /songs/aliases/refresh:
+    post:
+      consumes:
+      - application/json
+      description: 从YuzuChan API获取最新的歌曲别名
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 刷新歌曲别名
+      tags:
+      - songs
+  /songs/sync:
+    post:
+      description: 从Diving-Fish API获取并更新歌曲数据
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 同步歌曲数据
+      tags:
+      - songs
+  /system/status:
+    get:
+      description: 获取服务器运行状态、资源使用情况等
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_xumoe-c_maiecho_server_internal_status.SystemStatus'
+      summary: 获取系统状态
+      tags:
+      - system
+swagger: "2.0"

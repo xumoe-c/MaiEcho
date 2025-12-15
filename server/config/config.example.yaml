@@ -1,0 +1,18 @@
+server_port: :8080
+
+database_url: .\\server\\sqlite_db\\maiecho.db
+
+log:
+  level: info
+  output_path: logs/maiecho.log
+  encoding: console
+  llm_log_path: logs/llm_conversations.log
+
+llm:
+  base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  model: qwen-plus
+  api_key: 
+
+bilibili:
+  cookie: "" 
+  proxy: ""
