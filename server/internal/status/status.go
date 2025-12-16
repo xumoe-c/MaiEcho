@@ -2,7 +2,6 @@ package status
 
 import (
 	"runtime"
-	"sync"
 	"time"
 
 	"github.com/xumoe-c/maiecho/server/internal/logger"
@@ -18,7 +17,6 @@ type SystemStatus struct {
 
 var (
 	startTime time.Time
-	mu        sync.Mutex
 )
 
 func Init() {

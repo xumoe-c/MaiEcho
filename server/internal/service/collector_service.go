@@ -52,7 +52,7 @@ func NewCollectorService(s storage.Storage, songService SongService, cfg *config
 	collectors := []collector.Collector{discovery, mainCollector}
 
 	// 初始化调度器
-	sched := scheduler.NewScheduler(collectors, 1, 1000)
+	sched := scheduler.NewScheduler(collectors, s, 1, 1000)
 
 	return &collectorServiceImpl{
 		scheduler:          sched,
@@ -133,13 +133,29 @@ func (s *collectorServiceImpl) BackfillCollection() error {
 	tracker := logger.NewProgressTracker(len(songs), "排队回填任务中...")
 	defer tracker.Stop()
 
+	skippedCount := 0
+	queuedCount := 0
+
 	for _, song := range songs {
+		// 检查上次采集时间
+		if song.LastScraped != nil {
+			lastScraped, err := time.Parse(time.RFC3339, *song.LastScraped)
+			// 如果解析成功且距离现在不到 7 天，则跳过
+			if err == nil && time.Since(lastScraped) < 7*24*time.Hour {
+				skippedCount++
+				tracker.Increment()
+				continue
+			}
+		}
+
 		// 构造关键词: "歌曲标题 舞萌 maimai 手元 谱面确认"
 		keyword := fmt.Sprintf("%s 舞萌 maimai 手元 谱面确认", song.Title)
 		s.scheduler.AddTask(scheduler.Task{Keyword: keyword, SongID: song.ID})
+		queuedCount++
 		tracker.Increment()
 	}
 
+	logger.Info("回填任务排队完成", "module", "service.collector", "queued", queuedCount, "skipped", skippedCount)
 	return nil
 }
 

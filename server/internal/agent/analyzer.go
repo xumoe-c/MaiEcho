@@ -193,9 +193,9 @@ func (a *Analyzer) AnalyzeSong(ctx context.Context, songID uint) error {
 
 	// 4. 分桶分析
 	// 4.1 分析通用桶 (ChartID = 0)
-	if generalComments, ok := commentBuckets[0]; ok && len(generalComments) > 0 {
-		// 为了简化，我们可以把通用评论也作为上下文提供给具体谱面分析，或者单独出一个“歌曲综述”
-	}
+	// if generalComments, ok := commentBuckets[0]; ok && len(generalComments) > 0 {
+	// 	// 为了简化，我们可以把通用评论也作为上下文提供给具体谱面分析，或者单独出一个“歌曲综述”
+	// }
 
 	// 4.2 分析具体谱面桶
 	for chartID, bucketComments := range commentBuckets {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/xumoe-c/maiecho/server/internal/collector"
 	"github.com/xumoe-c/maiecho/server/internal/logger"
+	"github.com/xumoe-c/maiecho/server/internal/storage"
 )
 
 type Task struct {
@@ -16,20 +17,26 @@ type Task struct {
 	SongID  uint   // 可选：关联的歌曲ID
 }
 
+type contextKey string
+
+const songIDContextKey contextKey = "song_id"
+
 type Scheduler struct {
 	taskQueue   chan Task
 	collectors  []collector.Collector
+	storage     storage.Storage
 	workerCount int
 	wg          sync.WaitGroup
 	ctx         context.Context
 	cancel      context.CancelFunc
 }
 
-func NewScheduler(collectors []collector.Collector, workerCount int, bufferSize int) *Scheduler {
+func NewScheduler(collectors []collector.Collector, s storage.Storage, workerCount int, bufferSize int) *Scheduler {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Scheduler{
 		taskQueue:   make(chan Task, bufferSize),
 		collectors:  collectors,
+		storage:     s,
 		workerCount: workerCount,
 		ctx:         ctx,
 		cancel:      cancel,
@@ -88,7 +95,7 @@ func (s *Scheduler) worker(id int) {
 				// Create a context with SongID if present
 				ctx := s.ctx
 				if task.SongID != 0 {
-					ctx = context.WithValue(ctx, "song_id", task.SongID)
+					ctx = context.WithValue(ctx, songIDContextKey, task.SongID)
 				}
 
 				if err := c.Collect(ctx, task.Keyword); err != nil {
@@ -107,6 +114,12 @@ func (s *Scheduler) worker(id int) {
 						"collector", c.Name(),
 						"keyword", task.Keyword,
 					)
+					// 如果任务关联了 SongID，更新 LastScrapedTime
+					if task.SongID != 0 {
+						if err := s.storage.UpdateSongLastScrapedTime(task.SongID); err != nil {
+							logger.Error("更新上次采集时间失败", "module", "scheduler", "songID", task.SongID, "error", err)
+						}
+					}
 				}
 			}
 			spinner.Success(fmt.Sprintf("任务 %d 完成: %s", id, task.Keyword))

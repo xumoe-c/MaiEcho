@@ -19,5 +19,6 @@ type Storage interface {
 	GetAnalysisResultBySongID(songID uint) (*model.AnalysisResult, error)
 	GetAnalysisResultsByTarget(targetType string, targetID uint) (*model.AnalysisResult, error)
 	CreateVideo(video *model.Video) error
+	UpdateSongLastScrapedTime(songID uint) error
 	UpdateSongAliasSuitability(aliasID uint, isSuitable bool) error
 }

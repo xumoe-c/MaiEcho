@@ -11,9 +11,6 @@ import (
 	"github.com/xumoe-c/maiecho/server/internal/service"
 )
 
-// 为了生成Swag文档，规避报错，设置占位符 ParseComment error in file D:\Users\xumoe-c\Documents\Code\GitHub\MaiEcho\server\internal\controller\analysis_controller.go for comment: '// @Success 200 {object} model.AnalysisResult': cannot find type definition: model.AnalysisResult
-type holdplacer model.AnalysisResult
-
 type AnalysisController struct {
 	service *service.AnalysisService
 }

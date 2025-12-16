@@ -17,6 +17,7 @@ type Song struct {
 	Version     string      `json:"version"` // 乐曲更新版本
 	IsNew       bool        `json:"is_new"`
 	CoverURL    string      `json:"cover_url"`
+	LastScraped *string     `json:"last_scraped"` // 上次采集时间 (ISO8601 字符串或时间戳)
 	Charts      []Chart     `json:"charts,omitempty"`
 	Aliases     []SongAlias `json:"aliases,omitempty"`
 }

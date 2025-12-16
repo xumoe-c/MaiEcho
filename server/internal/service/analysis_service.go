@@ -6,6 +6,7 @@ import (
 	"github.com/xumoe-c/maiecho/server/internal/agent"
 	"github.com/xumoe-c/maiecho/server/internal/config"
 	"github.com/xumoe-c/maiecho/server/internal/llm"
+	"github.com/xumoe-c/maiecho/server/internal/logger"
 	"github.com/xumoe-c/maiecho/server/internal/model"
 	"github.com/xumoe-c/maiecho/server/internal/storage"
 )
@@ -51,7 +52,7 @@ func (s *AnalysisService) GetAggregatedAnalysisResultByGameID(gameID int) (*Aggr
 	if err != nil {
 		// 如果没有歌曲级别的结果，可能还没有分析过，或者只有谱面级别的结果（虽然不太可能）
 		// 这里我们允许 songResult 为 nil，或者返回错误
-		// return nil, err
+		logger.Debug("未找到歌曲分析结果", "module", "service.analysis", "songID", song.ID)
 	}
 
 	// 获取该歌曲下所有谱面的分析结果

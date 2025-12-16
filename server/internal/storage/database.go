@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"time"
+
 	"github.com/xumoe-c/maiecho/server/internal/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -201,6 +203,11 @@ func (d *Database) CreateVideo(video *model.Video) error {
 		return d.DB.Save(video).Error
 	}
 	return d.DB.Create(video).Error
+}
+
+func (d *Database) UpdateSongLastScrapedTime(songID uint) error {
+	now := time.Now().Format(time.RFC3339)
+	return d.DB.Model(&model.Song{}).Where("id = ?", songID).Update("last_scraped", now).Error
 }
 
 func (d *Database) UpdateSongAliasSuitability(aliasID uint, isSuitable bool) error {

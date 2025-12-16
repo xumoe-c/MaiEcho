@@ -27,11 +27,13 @@ func NewBilibiliDiscoveryCollector(s storage.Storage) *BilibiliDiscoveryCollecto
 	// 允许重复访问相同的 URL (因为我们需要定期扫描同一个搜索页面)
 	c.AllowURLRevisit = true
 
-	c.Limit(&colly.LimitRule{
+	if err := c.Limit(&colly.LimitRule{
 		DomainGlob:  "*bilibili.com*",
 		Parallelism: 1,
 		RandomDelay: 5 * time.Second,
-	})
+	}); err != nil {
+		logger.Error("设置发现采集限制失败", "module", "collector.bilibili_discovery", "error", err)
+	}
 
 	bdc := &BilibiliDiscoveryCollector{
 		storage: s,

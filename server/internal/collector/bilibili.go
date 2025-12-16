@@ -45,11 +45,13 @@ func NewBilibiliCollector(s storage.Storage, cookie string, proxy string) *Bilib
 	}
 
 	// 设置并发和延迟以避免被封禁
-	c.Limit(&colly.LimitRule{
+	if err := c.Limit(&colly.LimitRule{
 		DomainGlob:  "*bilibili.com*",
 		Parallelism: 2,
 		RandomDelay: 5 * time.Second, // Increase delay to be safer
-	})
+	}); err != nil {
+		logger.Error("设置采集限制失败", "module", "collector.bilibili", "error", err)
+	}
 
 	bc := &BilibiliCollector{
 		storage: s,
@@ -254,7 +256,9 @@ func (b *BilibiliCollector) handleSearchResponse(body []byte, ctx *colly.Context
 					newCtx.Put("song_id", songIDVal)
 				}
 
-				b.c.Request("GET", replyURL, nil, newCtx, nil)
+				if err := b.c.Request("GET", replyURL, nil, newCtx, nil); err != nil {
+					logger.Error("请求评论失败", "module", "collector.bilibili", "url", replyURL, "error", err)
+				}
 
 				return true
 			})
